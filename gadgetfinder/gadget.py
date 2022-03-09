@@ -1,11 +1,10 @@
 from capstone import *
 from keystone import *
 from elftools.elf.elffile import ELFFile
-import pefile
+#import pefile
 
 class gadget():
     def __init__(self, filename, format = 'ELF'):
-
         self.format = format
         self.filename = filename
         self.bin_sections = []
@@ -18,10 +17,8 @@ class gadget():
 
             for i in range(elffile.num_sections()):
                 section = elffile.get_section(i)
-
                 if section['sh_type'] != "SHT_PROGBITS":
                     continue
-
                 if not (section['sh_flags'] & 0x04):
                     continue
                 self.bin_sections.append({
@@ -36,9 +33,9 @@ class gadget():
     def printinfo(self):
         print('The file has following sections:')
         for section in self.bin_sections:
-            print('Name: ' + section['name'], 
-            'Addr: ' + hex(section['addr']), 
-            'Length: ' + str(len(section['data'])))
+            print('Name: ' + section['name'],
+                'Addr: ' + hex(section['addr']),
+                'Length: ' + str(len(section['data'])))
 
     def dump(self):
         md = Cs(CS_ARCH_X86, CS_MODE_64)
