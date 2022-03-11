@@ -42,7 +42,7 @@ class gadget():
         for chunk in self.bin_sections:
             if chunk['name'] != '.text':
                 continue
-            for i in md.disasm(chunk['data'], chunk['addr']+1):
+            for i in md.disasm(chunk['data'], chunk['addr']):
                 print("0x%x:\t%s\t%s" % (i.address, i.mnemonic, i.op_str))
 
 
