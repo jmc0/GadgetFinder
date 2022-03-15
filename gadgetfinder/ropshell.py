@@ -27,10 +27,19 @@ class ropshell(cmd.Cmd):
         except:
             print("Error reading " + filename)
             return ''
+        try:
+            format = str(line[1])
+        except:
+            format = 'ELF'
 
-        self.binary = gadget.gadget(filename)
+        try:
+            depth = int(line[2])
+        except:
+            depth = 3
+
+        self.binary = gadget.gadget(filename, format=format, depth=depth)
         print("Done.")
-    
+
     def do_disas(self, line):
         md = Cs(CS_ARCH_X86, CS_MODE_32)
         idx = line.index(']')
@@ -71,10 +80,46 @@ class ropshell(cmd.Cmd):
             print('No file loaded')
         self.binary.dump()
 
+    def do_search(self, line):
+        if line == "":
+            self.help_search()
+            return ''
+        
+        search_code = ""    
+        constraints = []
+        lines = line.strip().split()
+        for s in lines:
+            if s[0] == "-" and len(s) > 1: # a constraint
+                constraints += [s]
+            else:
+                search_code += " " + s
+            
+        print(f"Searching for ROP gadget: {search_code} with constraints: {constraints}")
+        
+        output = ""
+        for result in self.binary.asm_search(search_code, [set(constraints), set([])]):
+            if len(result) > 1:
+                (code, offset) = result
+                # just list out unique code for 3 times
+                output += hex(offset) + ": " + code + "\n"
+        keywords = search_code.replace("?", "").replace("%", "").replace("[", "").replace("]", "").strip()
+        keywords = keywords.split()
+        self.__page(output, keywords)
+        
+        return ''
+        
+    def help_search(self):
+        print('\n'.join([ 'Search for ROP gadgets, support wildcard matching ?, %',
+                            'Usage: search gadget [-exclude_instruction]',
+                            'Example: search mov eax ? # search for all gadgets contains "mov eax"',
+                            'Example: search add [ eax % ] % # search for all gadgets starting with "add [eax"', 
+                            'Example: search pop eax % -leave # search for all gadgets starting with "pop eax" and not contain "leave"',
+                       ]))
+
     def help_load(self):
         print("Load Binary File")
-        print("Usage: load filename fileformat")
-        print("Supported format: ELF")
+        print("Usage: load filename file_format backword_depth")
+        print("Supported format: ELF 4")
 
     def help_info(self):
         print("Print the basic info of the binary file")
@@ -94,6 +139,29 @@ class ropshell(cmd.Cmd):
 
     def do_exit(self, line):
         return True
+
+    # simple paging
+    def __page(self, str, keywords=[], lines=25):
+        for k in keywords:
+            str = str.replace(k, self.__highlight(k))
+        text = str.split('\n')
+        length = len(text)
+        for linenum in range(length):
+            print(text[linenum])
+            if linenum % lines == 0 and linenum >= lines:
+                key = input('--More-- (%d/%d)' % (linenum-1, length))
+                if key == 'q': 
+                    break
+
+    # linux ansicolor highlighting
+    def __highlight(self, word, color = "green"):
+        output = ""
+        suffix = "\033[0m"
+        if color == "green":
+            prefix = "\033[1;32m"
+        
+        output = prefix + word + suffix
+        return output
 
 
 if __name__ == '__main__':
