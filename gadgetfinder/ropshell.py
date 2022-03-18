@@ -13,12 +13,16 @@ class ropshell(cmd.Cmd):
         self.asmed = None
         self.ruler = '-'
         self.binary = None
+        self.argarch = {'x86':[CS_ARCH_X86, KS_ARCH_X86],
+                        'arm':[CS_ARCH_ARM, KS_ARCH_ARM]}
+        self.argmod = {'32':[CS_MODE_32,KS_MODE_32],
+                       '64':[CS_MODE_64,KS_MODE_64],
+                       'arm':[CS_MODE_ARM, KS_MODE_ARM]}
 
     def do_load(self, line):
         if line == "":
             self.help_load()
             return ''
-
         line = line.split()
         filename = line[0]
 
@@ -31,7 +35,6 @@ class ropshell(cmd.Cmd):
             format = str(line[1])
         except:
             format = 'ELF'
-
         try:
             depth = int(line[2])
         except:
@@ -41,13 +44,31 @@ class ropshell(cmd.Cmd):
         print("Done.")
 
     def do_disas(self, line):
-        md = Cs(CS_ARCH_X86, CS_MODE_32)
+        arch = CS_ARCH_X86
+        mode = CS_MODE_32
+
+        if '--arch' in line:
+            arcstr = line[line.find("--arch") + 6:].split()[0].casefold()
+            arch = self.argarch.get(arcstr)[0]
+            if arch is None:
+                print('Unsupported architecture')
+                return ''
+        if '--mode' in line:
+            modstr = line[line.find("--mode") + 6:].split()[0].casefold()
+            mode = self.argmod.get(modstr)[0]
+            if mode is None:
+                print('Unsupported mode')
+                return ''
+
+        md = Cs(arch, mode)
+        if '--' in line:
+            line = line[:line.find('--')]
         idx = line.index(']')
         l1 = line[:idx + 1]
         l2 = line[idx + 1:]
         addr = 0
         if(len(l2) > 1):
-            addr = int(l2)
+            addr = int(l2, 16) if '0x' in l2 else int(l2)
         blist = eval(l1)
         code = bytearray()
         for i in blist:
@@ -55,21 +76,43 @@ class ropshell(cmd.Cmd):
                 code += bytes.fromhex(i[2:])
             else:
                 code += bytes.fromhex('0' + i[2:])
-        for i in md.disasm(code, addr):
-            print("0x%x:\t%s\t%s" % (i.address, i.mnemonic, i.op_str))
+
+        try:
+            for i in md.disasm(code, addr):
+                print("0x%x:\t%s\t%s" % (i.address, i.mnemonic, i.op_str))
+        except:
+            print("ERROR DISASSEMBLING")
 
     def do_asm(self, line):
-        try:
-            # Initialize engine in X86-32bit mode
+        if '--' in line:
+            code = line[:line.find('--')]
+        else:
             code = line
-            ks = Ks(KS_ARCH_X86, KS_MODE_32)
+        arch = KS_ARCH_X86
+        mode = KS_MODE_32
+
+        if '--arch' in line:
+            arcstr = line[line.find("--arch") + 6:].split()[0].casefold()
+            arch = self.argarch.get(arcstr)[1]
+            if arch is None:
+                print('Unsupported architecture')
+                return ''
+        if '--mode' in line:
+            modstr = line[line.find("--mode") + 6:].split()[0].casefold()
+            mode = self.argmod.get(modstr)[1]
+            if mode is None:
+                print('Unsupported mode')
+                return ''
+
+        try:
+            ks = Ks(arch, mode)  # Initialize engine in X86-32bit mode
             encoding, count = ks.asm(code)
             self.asmed = ('').join([chr(x) for x in encoding]).encode()
             print("%s = %s \n(number of instructions: %u)" %(code,
                 [hex(x) for x in encoding], count))
         except:
             print("ERROR ASSEMBLING")
-            
+        
     def do_info(self, line):
         if not self.binary:
             print('No file loaded')
@@ -130,12 +173,16 @@ class ropshell(cmd.Cmd):
     def help_asm(self):
         print("Assemble instructions to bytecode")
         print("Usage: asm instructions")
-        print("Example: asm add eax, ebx; pop ecx")
+        print("Optional arguments: --arch, --mode")
+        print("Examples: asm add eax, ebx; pop ecx")
+        print("asm add eax, ebx; pop ecx --arch x86 --mode 64")
 
     def help_disas(self):
         print("Disassemble bytecode")
-        print("Usage: asm bytecode (start address)")
-        print("Example: disas ['0x1', '0xd8', '0x59'] 40")
+        print("Usage: asm bytecode")
+        print("Optional arguments: start address, --arch, --mode")
+        print("Examples: disas ['0x1', '0xd8', '0x59']")
+        print("disas ['0x1', '0xd8', '0x59'] 40 --arch x86 --mode 32")
 
     def do_exit(self, line):
         return True

@@ -1,7 +1,7 @@
 from capstone import *
 from keystone import *
 from elftools.elf.elffile import ELFFile
-#import pefile
+import pefile
 
 import trie
 
@@ -37,9 +37,15 @@ class gadget():
                                 'data': section.data()
                             })
             self.generate(backward_depth=backward_depth)
+            
         elif(format == 'PE'):
-            # pe = pefile.PE(filename)
-            pass
+            pe = pefile.PE(filename)
+            for section in pe.sections:
+                self.bin_chunks.append({
+                                    'name': section.Name.decode('utf-8'),
+                                    'addr': section.VirtualAddress,
+                                    'data': section.get_data()
+                                })
 
     def printinfo(self):
         print('The file has following sections:')
@@ -190,38 +196,51 @@ class gadget():
 
 
 if __name__ == '__main__':
-    filename = input('input filename')
-    f = open(filename, "rb")
-    elffile = ELFFile(f)
+    filename = input('input filename:')
+    format = input('input format:')
     bin_chunks = []
-    md = Cs(CS_ARCH_X86, CS_MODE_64)
 
-    for i in range(elffile.num_sections()):
-        section = elffile.get_section(i)
+    if format == 'ELF' or format == 'elf':
+        f = open(filename, "rb")
+        elffile = ELFFile(f)
+        md = Cs(CS_ARCH_X86, CS_MODE_64)
 
-        if section['sh_type'] != "SHT_PROGBITS":
-            continue
+        for i in range(elffile.num_sections()):
+            section = elffile.get_section(i)
+            if section['sh_type'] != "SHT_PROGBITS":
+                continue
+            if not (section['sh_flags'] & 0x04):
+                continue
 
-        if not (section['sh_flags'] & 0x04):
-            continue
-        bin_chunks.append({
-                        'name': section.name,
-                        'addr': section['sh_addr'],
-                        'data': section.data()
-                    })
+            bin_chunks.append({
+                            'name': section.name,
+                            'addr': section['sh_addr'],
+                            'data': section.data()
+                        })
 
-    print(bin_chunks)
+        print(bin_chunks)
 
-    for chunk in bin_chunks:
-        if chunk['name'] != '.text':
-            continue
-        for i in md.disasm(chunk['data'], chunk['addr']+1):
-            print("0x%x:\t%s\t%s" % (i.address, i.mnemonic, i.op_str))
+        for chunk in bin_chunks:
+            if chunk['name'] != '.text':
+                continue
+            for i in md.disasm(chunk['data'], chunk['addr']+1):
+                print("0x%x:\t%s\t%s" % (i.address, i.mnemonic, i.op_str))
+    
+    elif format == 'PE' or format == 'pe':
+        
+        pe = pefile.PE(filename)
+        for section in pe.sections:
+            print(section.Name.decode('utf-8'))
+            print("\tVirtual Address: " + hex(section.VirtualAddress))
+            print("\tVirtual Size: " + hex(section.Misc_VirtualSize))
+            print("\tRaw Size: " + hex(section.SizeOfRawData))
+            bin_chunks.append({
+                                'name': section.Name.decode('utf-8'),
+                                'addr': section.VirtualAddress,
+                                'data': section.get_data()
+                            })
+        
+        print(bin_chunks)
 
-    # pe = pefile.PE('')
-
-    # for section in pe.sections:
-    #     print(section.Name.decode('utf-8'))
-    #     print("\tVirtual Address: " + hex(section.VirtualAddress))
-    #     print("\tVirtual Size: " + hex(section.Misc_VirtualSize))
-    #     print("\tRaw Size: " + hex(section.SizeOfRawData))
+    else:
+        print('Unsupported format')
