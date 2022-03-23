@@ -39,7 +39,6 @@ class gadget():
                                 'addr': section['sh_addr'],
                                 'data': section.data()
                             })
-            self.generate(backward_depth=backward_depth)
             
         elif(format.casefold() == 'pe'):
             pe = pefile.PE(filename)
@@ -49,6 +48,8 @@ class gadget():
                                     'addr': section.VirtualAddress,
                                     'data': section.get_data()
                                 })
+        
+        self.generate(backward_depth=backward_depth)
 
     def printinfo(self):
         print('The file has following sections:')
