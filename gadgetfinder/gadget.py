@@ -1,3 +1,4 @@
+from platform import architecture
 from capstone import *
 from keystone import *
 from elftools.elf.elffile import ELFFile
@@ -10,8 +11,10 @@ RET_CODE = {"ret" : b"\xc3"} # return opcode
 BAD_INSTS = ["DB", "CALL 0x", "JMP 0x", "JN", "JE", "JZ", "JB", "JA", "JAE", "JO", "IN", "HLT", "LES", "FLD"]
 
 class gadget():
-    def __init__(self, filename, format = 'ELF', depth=3):
+    def __init__(self, filename, format = 'ELF', depth=3, arch = CS_ARCH_X86, mode = CS_MODE_32):
         self.format = format
+        self.arch = arch
+        self.mode = mode
         self.filename = filename
         self.bin_sections = []
         self.__asmgadget = trie.Trie()
@@ -22,7 +25,7 @@ class gadget():
 
     def load(self, filename, format, backward_depth=3):
         f = open(filename, "rb")
-        if(format == 'ELF'):
+        if(format.casefold() == 'elf'):
             elffile = ELFFile(f)
 
             for i in range(elffile.num_sections()):
@@ -38,11 +41,11 @@ class gadget():
                             })
             self.generate(backward_depth=backward_depth)
             
-        elif(format == 'PE'):
+        elif(format.casefold() == 'pe'):
             pe = pefile.PE(filename)
             for section in pe.sections:
-                self.bin_chunks.append({
-                                    'name': section.Name.decode('utf-8'),
+                self.bin_sections.append({
+                                    'name': section.Name.decode('utf-8').strip('\x00'),
                                     'addr': section.VirtualAddress,
                                     'data': section.get_data()
                                 })
@@ -55,7 +58,7 @@ class gadget():
                 'Length: ' + str(len(section['data'])))
 
     def dump(self):
-        md = Cs(CS_ARCH_X86, CS_MODE_64)
+        md = Cs(self.arch, self.mode)
         for chunk in self.bin_sections:
             if chunk['name'] != '.text':
                 continue
@@ -69,7 +72,7 @@ class gadget():
     # generate the gadgets from binary file, can be called multiple times
     #
     def generate(self, backward_depth = 3):
-        md = Cs(CS_ARCH_X86, CS_MODE_64)
+        md = Cs(self.arch, self.mode)
         for chunk in self.bin_sections:
             self.set_backward_depth(backward_depth)
             base_addr = chunk['addr']

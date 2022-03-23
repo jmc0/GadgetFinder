@@ -14,51 +14,75 @@ class ropshell(cmd.Cmd):
         self.ruler = '-'
         self.binary = None
         self.argarch = {'x86':[CS_ARCH_X86, KS_ARCH_X86],
-                        'arm':[CS_ARCH_ARM, KS_ARCH_ARM]}
-        self.argmod = {'32':[CS_MODE_32,KS_MODE_32],
-                       '64':[CS_MODE_64,KS_MODE_64],
-                       'arm':[CS_MODE_ARM, KS_MODE_ARM]}
+                        'arm':[CS_ARCH_ARM, KS_ARCH_ARM],
+                        'arm64':[CS_ARCH_ARM64, KS_ARCH_ARM64],
+                        'mips':[CS_ARCH_MIPS, KS_ARCH_MIPS]}
+        self.argmod = {'16':[CS_MODE_16, KS_MODE_16],
+                       '32':[CS_MODE_32, KS_MODE_32],
+                       '64':[CS_MODE_64, KS_MODE_64],
+                       'arm':[CS_MODE_ARM, KS_MODE_ARM],
+                       'bigendian':[CS_MODE_BIG_ENDIAN, KS_MODE_BIG_ENDIAN],
+                       'littleendian':[CS_MODE_LITTLE_ENDIAN, KS_MODE_LITTLE_ENDIAN]}
+   
+    def parse_arg(self, line, arg, dic, i, default):
+        if arg in line:
+            argstr = line[line.find(arg) + len(arg):].split()[0].casefold()
+            res = dic.get(argstr)
+            return res[i] if res else res
+        else:
+            return default
 
     def do_load(self, line):
         if line == "":
             self.help_load()
             return ''
-        line = line.split()
-        filename = line[0]
+        filename = line.split()[0]
 
         try:
             open(filename, 'r')
         except:
             print("Error reading " + filename)
             return ''
-        try:
-            format = str(line[1])
-        except:
-            format = 'ELF'
-        try:
-            depth = int(line[2])
-        except:
-            depth = 3
+        
+        arch = self.parse_arg(line, '--arch', self.argarch, 0, CS_ARCH_X86)
+        if arch is None:
+            print('Unsupported architecture')
+            return ''
+        mode = self.parse_arg(line, '--mode', self.argmod, 0, CS_MODE_32)
+        if mode is None:
+            print('Unsupported mode')
+            return ''
 
-        self.binary = gadget.gadget(filename, format=format, depth=depth)
+        depth = 3
+        if '--depth' in line:
+            try:
+                depth = int(line[line.find("--depth") + 7:].split()[0])
+                if depth < 0:
+                    print('Wrong depth')
+                    return
+            except:
+                print('Wrong depth')
+                return ''
+
+        format = 'ELF'
+        if '--format' in line:
+            format = line[line.find("--format") + 8:].split()[0].casefold()
+            if format not in ['elf', 'pe']:
+                print('Unsupported format')
+                return
+
+        self.binary = gadget.gadget(filename, format=format, depth=depth, arch = arch, mode = mode)
         print("Done.")
 
     def do_disas(self, line):
-        arch = CS_ARCH_X86
-        mode = CS_MODE_32
-
-        if '--arch' in line:
-            arcstr = line[line.find("--arch") + 6:].split()[0].casefold()
-            arch = self.argarch.get(arcstr)[0]
-            if arch is None:
-                print('Unsupported architecture')
-                return ''
-        if '--mode' in line:
-            modstr = line[line.find("--mode") + 6:].split()[0].casefold()
-            mode = self.argmod.get(modstr)[0]
-            if mode is None:
-                print('Unsupported mode')
-                return ''
+        arch = self.parse_arg(line, '--arch', self.argarch, 0, CS_ARCH_X86)
+        if arch is None:
+            print('Unsupported architecture')
+            return ''
+        mode = self.parse_arg(line, '--mode', self.argmod, 0, CS_MODE_32)
+        if mode is None:
+            print('Unsupported mode')
+            return ''
 
         md = Cs(arch, mode)
         if '--' in line:
@@ -69,7 +93,12 @@ class ropshell(cmd.Cmd):
         addr = 0
         if(len(l2) > 1):
             addr = int(l2, 16) if '0x' in l2 else int(l2)
-        blist = eval(l1)
+
+        try:
+            blist = eval(l1)
+        except:
+            print("Corrupted binary code")
+            return ''
         code = bytearray()
         for i in blist:
             if(len(i) > 3):
@@ -88,21 +117,15 @@ class ropshell(cmd.Cmd):
             code = line[:line.find('--')]
         else:
             code = line
-        arch = KS_ARCH_X86
-        mode = KS_MODE_32
 
-        if '--arch' in line:
-            arcstr = line[line.find("--arch") + 6:].split()[0].casefold()
-            arch = self.argarch.get(arcstr)[1]
-            if arch is None:
-                print('Unsupported architecture')
-                return ''
-        if '--mode' in line:
-            modstr = line[line.find("--mode") + 6:].split()[0].casefold()
-            mode = self.argmod.get(modstr)[1]
-            if mode is None:
-                print('Unsupported mode')
-                return ''
+        arch = self.parse_arg(line, '--arch', self.argarch, 1, KS_ARCH_X86)
+        if arch is None:
+            print('Unsupported architecture')
+            return ''
+        mode = self.parse_arg(line, '--mode', self.argmod, 1, KS_MODE_32)
+        if mode is None:
+            print('Unsupported mode')
+            return ''
 
         try:
             ks = Ks(arch, mode)  # Initialize engine in X86-32bit mode
@@ -161,7 +184,9 @@ class ropshell(cmd.Cmd):
 
     def help_load(self):
         print("Load Binary File")
-        print("Usage: load filename file_format backword_depth")
+        print("Usage: load filename file_format backword_depth architecture mode")
+        print("Note: backword_depth, architecture and mode are optional arguments")
+        print("Example: load prog elf 4 x86 32")
         print("Supported format: ELF 4")
 
     def help_info(self):
