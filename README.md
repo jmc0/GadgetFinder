@@ -24,6 +24,6 @@ pip install -r requirements.txt
 
 Run the interactive shell:
 ```bash
-cd gadgetfinder
+cd src
 python ropshell.py
 ```
