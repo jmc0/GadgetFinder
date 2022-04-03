@@ -7,7 +7,7 @@ Can also assemble and disassemble instructions.
 ## Requirements
 + capstone
 + keystone
-+ elftools
++ pyelftools
 + pefile
 
 ## Getting started
@@ -26,4 +26,13 @@ Run the interactive shell:
 ```bash
 cd src
 python ropshell.py
+```
+
+Build your own package:
+You can edit setup.config.
+To build:
+```bash
+python3 -m pip install --upgrade pip
+python3 -m pip install --upgrade build
+python3 -m build
 ```
