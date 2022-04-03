@@ -11,12 +11,13 @@ Can also assemble and disassemble instructions.
 + pefile
 
 ## Getting started
+create a virtualenv:
 ```bash
-virtualenv env            # create a virtualenv
+virtualenv env            
 source env/bin/activate   # activate the Python virtualenv 
 ```
 
-Install development dependencies
+Install development dependencies:
 ```bash
 pip install -r requirements.txt
 ```
