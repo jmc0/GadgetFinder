@@ -25,10 +25,10 @@ pip install -r requirements.txt
 Run the interactive shell:
 ```bash
 cd src
-python shell.py
+python3 shell.py
 ```
 
-## Build your own package:
+## Build your own package
 You can edit configuration in setup.config.\
 To build:
 ```bash
