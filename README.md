@@ -25,11 +25,11 @@ pip install -r requirements.txt
 Run the interactive shell:
 ```bash
 cd src
-python ropshell.py
+python shell.py
 ```
 
-Build your own package:
-You can edit setup.config.
+## Build your own package:
+You can edit configuration in setup.config.\
 To build:
 ```bash
 python3 -m pip install --upgrade pip
