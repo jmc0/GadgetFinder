@@ -36,3 +36,14 @@ python3 -m pip install --upgrade pip
 python3 -m pip install --upgrade build
 python3 -m build
 ```
+
+## Package usage
+### Installation
+```
+$ pip install gadgetfinder==0.0.1
+```
+
+### Usage
+
+<img src="media/ts1.png" width="80%" height="80%" />
+<img src="media/ts2.png" width="80%" height="80%" />
