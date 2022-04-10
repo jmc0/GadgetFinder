@@ -53,7 +53,7 @@ class ropshell(cmd.Cmd):
             print('Unsupported mode')
             return ''
 
-        depth = 3
+        depth = 4
         if '--depth' in line:
             try:
                 depth = int(line[line.find("--depth") + 7:].split()[0])
@@ -71,7 +71,7 @@ class ropshell(cmd.Cmd):
                 print('Unsupported format')
                 return
 
-        self.binary = gadget.gadget(filename, format=format, depth=depth, arch = arch, mode = mode)
+        self.binary = gadget.gadget(filename, file_format=format, depth=depth, arch = arch, mode = mode)
         print("Done.")
 
     def do_disas(self, line):
@@ -130,7 +130,6 @@ class ropshell(cmd.Cmd):
         try:
             ks = Ks(arch, mode)  # Initialize engine in X86-32bit mode
             encoding, count = ks.asm(code)
-            self.asmed = ('').join([chr(x) for x in encoding]).encode()
             print("%s = %s \n(number of instructions: %u)" %(code,
                 [hex(x) for x in encoding], count))
         except:
@@ -226,7 +225,7 @@ class ropshell(cmd.Cmd):
                     break
 
     # linux ansicolor highlighting
-    def __highlight(self, word, color = "green"):
+    def __highlight(self, word, color="green"):
         output = ""
         suffix = "\033[0m"
         if color == "green":
