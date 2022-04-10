@@ -44,12 +44,6 @@ $ pip install gadgetfinder==0.0.1
 ```
 
 ### Usage
-```python
-import gadgetfinder
-binary = gadgetfinder.load('path/data/prog.file', 'elf', 4,'x86','32')
-gadgetfinder.info(binary)
-gadgetfinder.dump(binary)
-gadgetfinder.disas("['0x1', '0xd8', '0x59'] 40", 'x86', '32')
-gadgetfinder.asm('add eax, ebx; pop ecx', 'x86', '32')
-gadgetfinder.search(binary, 'pop rbp')
-```
+
+<img src="media/ts1.png" width="80%" height="80%" />
+<img src="media/ts2.png" width="80%" height="80%" />
