@@ -199,7 +199,7 @@ class ropshell(cmd.Cmd):
         print("Usage: asm instructions")
         print("Optional arguments: --arch, --mode")
         print("Examples: asm add eax, ebx; pop ecx")
-        print("asm add eax, ebx; pop ecx --arch x86 --mode 64")
+        print("asm add eax, ebx; pop ecx --arch x86 --mode 32")
 
     def help_disas(self):
         print("Disassemble bytecode")

@@ -1,4 +1,5 @@
 capstone
 keystone
+keystone-engine
 pyelftools
 pefile

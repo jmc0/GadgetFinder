@@ -28,6 +28,10 @@ cd src
 python3 shell.py
 ```
 
+Example:\
+<img src="media/shell2.PNG" width="80%" height="80%" />
+<img src="media/shell1.PNG" width="80%" height="80%" />
+
 ## Build your own package
 You can edit configuration in setup.config.\
 To build:
