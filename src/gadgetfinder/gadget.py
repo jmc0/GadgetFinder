@@ -3,7 +3,10 @@ from capstone import *
 from keystone import *
 from elftools.elf.elffile import ELFFile
 import pefile
+import os
+import sys
 
+sys.path.append(os.path.join(os.path.dirname(__file__)))
 import trie
 
 RET_CODE = {"ret" : b"\xc3"} # return opcode
@@ -11,8 +14,8 @@ RET_CODE = {"ret" : b"\xc3"} # return opcode
 BAD_INSTS = ["DB", "CALL 0x", "JMP 0x", "JN", "JE", "JZ", "JB", "JA", "JAE", "JO", "IN", "HLT", "LES", "FLD"]
 
 class gadget():
-    def __init__(self, filename, format = 'ELF', depth=3, arch = CS_ARCH_X86, mode = CS_MODE_32):
-        self.format = format
+    def __init__(self, filename, file_format = 'ELF', depth=3, arch = CS_ARCH_X86, mode = CS_MODE_32):
+        self.file_format = file_format
         self.arch = arch
         self.mode = mode
         self.filename = filename
@@ -21,11 +24,11 @@ class gadget():
         self.__asmgadget.set_case_sensitive(False)
         self.__backward_depth = depth # default number of insts for backward processing
         self.__max_duplicate = 3 # default number duplicate gadgets, keep somes for enough offset alternatives
-        self.load(filename, format, self.__backward_depth)
+        self.load(filename, file_format, self.__backward_depth)
 
-    def load(self, filename, format, backward_depth=3):
+    def load(self, filename, file_format, backward_depth=3):
         f = open(filename, "rb")
-        if(format.casefold() == 'elf'):
+        if(file_format.casefold() == 'elf'):
             elffile = ELFFile(f)
 
             for i in range(elffile.num_sections()):
@@ -40,7 +43,7 @@ class gadget():
                                 'data': section.data()
                             })
             
-        elif(format.casefold() == 'pe'):
+        elif(file_format.casefold() == 'pe'):
             pe = pefile.PE(filename)
             for section in pe.sections:
                 self.bin_sections.append({
@@ -145,7 +148,7 @@ class gadget():
             self.__asmgadget.insert(code, value)
 
     #
-    # search for asm code in text format
+    # search for asm code in text file_format
     #
     def asm_search(self, asmcode, constraints = [set([]), set(["-00"])], depth = 1):
         # e.g mov eax,ebx
@@ -168,7 +171,7 @@ class gadget():
 
     #
     # filter for denied inst or register in asm code
-    # filter format: ["-esp", "-sub"]
+    # filter file_format: ["-esp", "-sub"]
     #
     def __filter_instruction(self, retcode, constraints = set([])):
         result = []
@@ -186,7 +189,7 @@ class gadget():
 
     #
     # filter for denied chars in offset address
-    # filter format: ["-00", "-0a"]
+    # filter file_format: ["-00", "-0a"]
     #
     def __filter_address(self, retcode, constraints = set([])):
         result = []
@@ -201,10 +204,10 @@ class gadget():
 
 if __name__ == '__main__':
     filename = input('input filename:')
-    format = input('input format:')
+    file_format = input('input file_format:')
     bin_chunks = []
 
-    if format == 'ELF' or format == 'elf':
+    if file_format == 'ELF' or file_format == 'elf':
         f = open(filename, "rb")
         elffile = ELFFile(f)
         md = Cs(CS_ARCH_X86, CS_MODE_64)
@@ -230,7 +233,7 @@ if __name__ == '__main__':
             for i in md.disasm(chunk['data'], chunk['addr']+1):
                 print("0x%x:\t%s\t%s" % (i.address, i.mnemonic, i.op_str))
     
-    elif format == 'PE' or format == 'pe':
+    elif file_format == 'PE' or file_format == 'pe':
         
         pe = pefile.PE(filename)
         for section in pe.sections:
@@ -247,4 +250,4 @@ if __name__ == '__main__':
         print(bin_chunks)
 
     else:
-        print('Unsupported format')
+        print('Unsupported file_format')
