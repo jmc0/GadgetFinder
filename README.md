@@ -36,3 +36,14 @@ python3 -m pip install --upgrade pip
 python3 -m pip install --upgrade build
 python3 -m build
 ```
+
+## Package usage
+```python
+import gadgetfinder
+binary = gadgetfinder.load('path/data/prog.file', 'elf', 4,'x86','32')
+gadgetfinder.info(binary)
+gadgetfinder.dump(binary)
+gadgetfinder.disas("['0x1', '0xd8', '0x59'] 40", 'x86', '32')
+gadgetfinder.asm('add eax, ebx; pop ecx', 'x86', '32')
+gadgetfinder.search(binary, 'pop rbp')
+```
