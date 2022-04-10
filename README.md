@@ -38,6 +38,12 @@ python3 -m build
 ```
 
 ## Package usage
+### Installation
+```
+$ pip install gadgetfinder==0.0.1
+```
+
+### Usage
 ```python
 import gadgetfinder
 binary = gadgetfinder.load('path/data/prog.file', 'elf', 4,'x86','32')
