@@ -107,7 +107,7 @@ class gadget():
 
     # backward process for code from RET
     def __process_backward(self, hexbyte, end_offset):
-        md = Cs(CS_ARCH_X86, CS_MODE_64)
+        md = Cs(self.arch, self.mode)
         RET = RET_CODE["ret"]
         l = len(hexbyte)
         for i in range(l):
