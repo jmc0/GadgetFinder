@@ -11,7 +11,7 @@ import trie
 
 RET_CODE = {"ret" : b"\xc3"} # return opcode
 # useless instructions, we will not put these to gadgets
-BAD_INSTS = ["DB", "CALL 0x", "JMP 0x", "JN", "JE", "JZ", "JB", "JA", "JAE", "JO", "IN", "HLT", "LES", "FLD"]
+BAD_INSTS = ["DB", "CALL 0x", "JMP 0x", "JN", "JE", "JZ", "JB", "JC", "JA", "JAE", "JO", "IN", "HLT", "LES", "FLD"]
 
 class gadget():
     def __init__(self, filename, file_format = 'ELF', depth=3, arch = CS_ARCH_X86, mode = CS_MODE_32):
@@ -122,11 +122,10 @@ class gadget():
                     instruction = (dis.mnemonic + ' ' + dis.op_str).upper()
                     asmcode += ("".join(instruction).replace(",", " ")).split() + [";"]
 
-                # skip bad instructions
                 s = " ".join(asmcode)
                 if "CALL 0x" in s or "JMP 0x" in s:
                     continue
-                if set(asmcode).intersection(set(BAD_INSTS)) != set([]):
+                if len(set(asmcode).intersection(set(BAD_INSTS))) != 0:
                     continue
 
                 value = (" ".join(asmcode).casefold() + ";", end_offset - i)
@@ -136,14 +135,7 @@ class gadget():
     # insert asmcode to asmgadget trie
     # special case: [eax + 0xdeadbeef], eax + 0xdeadbeef, [eax + esi * n],
     def __insert_asmcode(self, instruction, value):
-        result = []
-        code = "@".join(instruction).replace("@;", "").replace(" ", "").casefold()
-        code = code.replace("-", "@-@")
-        code = code.replace("+", "@+@")
-        code = code.replace("*", "@*@")
-        code = code.replace("]", "@]")
-        code = code.replace("[", "[@")
-        code = code.split("@")
+        code = "@".join(instruction).replace("@;", "").replace(" ", "").casefold().replace("-", "@-@").replace("+", "@+@").replace("*", "@*@").replace("]", "@]").replace("[", "[@").split("@")
         result = self.__asmgadget.retrieve(code)
         if len(result) < self.__max_duplicate: # still need offset for this gadget
             self.__asmgadget.insert(code, value)
