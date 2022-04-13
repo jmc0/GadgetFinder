@@ -159,7 +159,7 @@ class ropshell(cmd.Cmd):
             else:
                 search_code += " " + s
             
-        print(f"Searching for ROP gadget: {search_code} with constraints: {constraints}")
+        print(f"Searching for ROP gadget: {search_code} with RET, constraints: {constraints}")
         
         output = ""
         for result in self.binary.asm_search(search_code, [set(constraints), set([])]):
