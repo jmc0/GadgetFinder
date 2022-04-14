@@ -71,3 +71,7 @@ $ pip install gadgetfinder==0.0.1
 
 <img src="media/ts1.png" width="80%" height="80%" />
 <img src="media/ts2.png" width="80%" height="80%" />
+
+
+## Known issue
+Unable to find some gadget
