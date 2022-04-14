@@ -24,13 +24,33 @@ pip install -r requirements.txt
 
 Run the interactive shell:
 ```bash
-cd src
+cd src/gadgetfinder
 python3 shell.py
 ```
 
-Example:\
+## Examples
+In the interactive shell, run:
+```bash
+asm inc eax; add eax,ecx  --arch x86  --mode 64
+disas ['0xff', '0xc0', '0x1', '0xc8'] --mode 64
+asm pop ebp; ret
+disas ['0x5d', '0xc3']
+```
 <img src="media/shell2.PNG" width="80%" height="80%" />
-<img src="media/shell1.PNG" width="80%" height="80%" />
+
+```bash
+load ../../data/prog.file 
+info
+dump
+```
+
+<img src="media/shell1.PNG" width="50%" height="50%" />
+
+```bash
+search pop ebp
+```
+
+<img src="media/shell3.PNG" width="80%" height="80%" />
 
 ## Build your own package
 You can edit configuration in setup.config.\
