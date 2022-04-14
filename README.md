@@ -24,11 +24,11 @@ pip install -r requirements.txt
 
 Run the interactive shell:
 ```bash
-cd src
+cd src/gadgetfinder
 python3 shell.py
 ```
 
-Example:\
+##Examples
 In the interactive shell, run:
 ```bash
 asm inc eax; add eax,ecx  --arch x86  --mode 64
@@ -37,7 +37,7 @@ asm pop ebp; ret
 disas ['0x5d', '0xc3']
 ```
 <img src="media/shell2.PNG" width="80%" height="80%" />
-```
+```bash
 load ../../data/prog.file 
 info
 dump
