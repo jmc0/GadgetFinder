@@ -64,7 +64,7 @@ python3 -m build
 ## Package usage
 ### Installation
 ```
-$ pip install gadgetfinder==0.0.1
+$ pip install gadgetfinder==1.0.0
 ```
 
 ### Usage
