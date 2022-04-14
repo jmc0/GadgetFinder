@@ -86,7 +86,7 @@ class ropshell(cmd.Cmd):
 
         md = Cs(arch, mode)
         if '--' in line:
-            line = line[:line.find('--')]
+            line = line[:line.find('--')].strip()
         idx = line.index(']')
         l1 = line[:idx + 1]
         l2 = line[idx + 1:]
@@ -183,10 +183,10 @@ class ropshell(cmd.Cmd):
 
     def help_load(self):
         print("Load Binary File")
-        print("Usage: load filename file_format backword_depth architecture mode")
-        print("Note: backword_depth, architecture and mode are optional arguments")
-        print("Example: load prog elf 4 x86 32")
-        print("Supported format: ELF 4")
+        print("Usage: load filename")
+        print("Optional arguments: --format --depth --arch --mode")
+        print("Note: Supported format: ELF and PE")
+        print("Example: load prog --format elf --depth 4 --arch x86 --mode 32")
 
     def help_info(self):
         print("Print the basic info of the binary file")
